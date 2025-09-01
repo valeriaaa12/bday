@@ -1,23 +1,24 @@
 "use client";
 
-
 import { Silkscreen } from "next/font/google";
 import React, { useState } from "react";
-import HeadphonesModal from "../components/music"; 
-const pixel = Silkscreen({ subsets: ["latin"], weight: "400" });
+import { useRouter } from "next/navigation";        // 👈 NEW
+import HeadphonesModal from "../components/music";
 
+const pixel = Silkscreen({ subsets: ["latin"], weight: "400" });
 
 type IconItem = { src: string; alt: string; onClick?: () => void; };
 
 const ICONS_BASE: IconItem[] = [
   { src: "/images/letter.png",   alt: "Letter for you" },
-  { src: "/images/musica.png",   alt: "Songs for you" },  // <- headphones
+  { src: "/images/musica.png",   alt: "Songs for you" },
   { src: "/images/reminder.png", alt: "Reminders for you" },
-  { src: "/images/spidey.png",   alt: "Spidey game" },
+  { src: "/images/spidey.png",   alt: "Spidey game" }, 
 ];
 
 export default function LandingPage() {
-     const [songsOpen, setSongsOpen] = useState(false);
+  const [songsOpen, setSongsOpen] = useState(false);
+  const router = useRouter();                         
 
   const playlist = [
     { id: "2u2Z07ujyD8", title: "Favorite Girl", artist: "Justin Bieber", coverUrl: "/images/2.png", reason: "me acuerdo cuando dijiste que era de tus favoritas y la ibas cantando en el carro" },
@@ -30,20 +31,27 @@ export default function LandingPage() {
     { id: "-0qX2nxwsP4", title: "BUENAS NOCHES", artist: "Quevedo", coverUrl: "/images/8.png", reason:"mención honorífica, obvio la tenia que incluir" },
   ];
 
-const ICONS: IconItem[] = ICONS_BASE.map((i) =>
-    i.alt === "Songs for you" ? { ...i, onClick: () => setSongsOpen(true) } : i
-  );
-
+  // 👇 Añadimos acciones a los íconos según el alt
+  const ICONS: IconItem[] = ICONS_BASE.map((i) => {
+    if (i.alt === "Songs for you") return { ...i, onClick: () => setSongsOpen(true) };
+    if (i.alt === "Spidey game")  return { ...i, onClick: () => router.push("/app/platformer/page") }; // 👈 Navega
+    return i;
+  });
 
   return (
     <main className={`${pixel.className} landing`}>
-      <p className="hint" >Press any icon!</p>
+      <p className="hint">Press any icon!</p>
 
-      
       <div className="icons">
         {ICONS.map((i) => (
           <button key={i.src} className="iconBtn" aria-label={i.alt} onClick={i.onClick}>
-            <img src={i.src} alt={i.alt} draggable={false} />
+            {/* 👇 aplica la clase .spidey sólo a ese icono */}
+            <img
+              src={i.src}
+              alt={i.alt}
+              draggable={false}
+              className={i.alt === "Spidey game" ? "spidey" : undefined}
+            />
           </button>
         ))}
       </div>
@@ -64,7 +72,7 @@ const ICONS: IconItem[] = ICONS_BASE.map((i) =>
         .hint {
           color: #fff;
           font-weight: 900;
-          letter-spacing: 1px; /* a bit more retro */
+          letter-spacing: 1px;
           text-shadow: 0 2px 0 rgba(0, 0, 0, 0.28);
           margin: 0;
           font-size: clamp(14px, 2.6vw, 22px);
@@ -87,7 +95,6 @@ const ICONS: IconItem[] = ICONS_BASE.map((i) =>
           transition: transform 150ms ease;
         }
 
-        /* default size for icons */
         .iconBtn img {
           width: clamp(84px, 15vw, 180px);
           height: auto;
@@ -102,7 +109,6 @@ const ICONS: IconItem[] = ICONS_BASE.map((i) =>
           width: clamp(70px, 12vw, 150px);
         }
 
-        /* shadow ellipse */
         .iconBtn::after {
           content: "";
           position: absolute;

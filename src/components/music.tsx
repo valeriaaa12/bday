@@ -381,7 +381,7 @@ export default function HeadphonesModal({
           display: grid; place-items: center; box-shadow: 0 10px 20px rgba(58,134,200,.35);
         }
 
-        .reason { margin-top: 10px; font-size: 12px; line-height: 1.25; }
+        .reason { margin-top: 50px; font-size: 12px; line-height: 1.25; margin-bottom: 30px; }
 
         .yt-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(0 0 0 0); opacity: 0; pointer-events: none; }
       `}</style>
