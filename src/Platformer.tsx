@@ -129,45 +129,45 @@ export default function Platformer() {
       window.removeEventListener("keyup", up);
     };
   }, [started, gameOver]);
+// 1) crea una ref y mantenla actualizada
+const updateRef = useRef(update);
+updateRef.current = update;
 
-  /** ====== LOOP ====== */
-  useEffect(() => {
-    if (!loaded) return;
-    const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx) return;
+// 2) dentro del useEffect del loop, usa la ref
+useEffect(() => {
+  if (!loaded) return;
+  const ctx = canvasRef.current?.getContext("2d");
+  if (!ctx) return;
 
-    // Hi-DPI scaling
-    const dpr = window.devicePixelRatio || 1;
-    const cw = VIEW.width,
-      ch = VIEW.height;
-    const canvas = canvasRef.current!;
-    canvas.width = Math.round(cw * dpr);
-    canvas.height = Math.round(ch * dpr);
-    canvas.style.width = cw + "px";
-    canvas.style.height = ch + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    (ctx as any).imageSmoothingEnabled = false;
+  // Hi-DPI...
+  const dpr = window.devicePixelRatio || 1;
+  const cw = VIEW.width, ch = VIEW.height;
+  const canvas = canvasRef.current!;
+  canvas.width = Math.round(cw * dpr);
+  canvas.height = Math.round(ch * dpr);
+  canvas.style.width = cw + "px";
+  canvas.style.height = ch + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false; // ✅ sin any
 
-    let last = performance.now();
-    const step = (now: number) => {
-      const dt = Math.min(0.033, (now - last) / 1000);
-      last = now;
-
-      // 👇 Pausa si no ha iniciado o si hay game over
-      if (!gameOver && started) update(dt);
-
-      render(ctx);
-      rafRef.current = requestAnimationFrame(step);
-    };
+  let last = performance.now();
+  const step = (now: number) => {
+    const dt = Math.min(0.033, (now - last) / 1000);
+    last = now;
+    if (!gameOver && started) updateRef.current(dt); // ✅ usa ref
+    render(ctx);
     rafRef.current = requestAnimationFrame(step);
+  };
+  rafRef.current = requestAnimationFrame(step);
 
-    return () => {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-    };
-  }, [loaded, started, gameOver]);
+  return () => {
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  };
+  // 👇 ya NO necesita 'update'
+}, [loaded, started, gameOver]);
 
   /** ====== UPDATE ====== */
   function update(dt: number) {

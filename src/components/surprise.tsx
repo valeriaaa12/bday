@@ -1,6 +1,6 @@
-// components/MoodModal.tsx
 "use client";
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 
 // 👉 Reusable pixel-style modal shell
 function PixelModal({
@@ -56,7 +56,7 @@ function PixelModal({
         </div>
       </div>
 
-      {/* pixel crisp for imgs */}
+      {/* pixel crisp */}
       <style jsx global>{`
         .pixel-img {
           image-rendering: pixelated;
@@ -80,11 +80,31 @@ export default function MoodModal({
   boxSrc?: string;
 }) {
   const choices = [
-    { id: "happy", label: "feel happy", msg: "Im happy that you are happy.Glad everything is going well for you, you deserve it.I want to see you win and smash every single dream you have. I want to see you overcome all of the barriers you face and see you succeed. You are destined for greatness and I want to see you achieve it." },
-    { id: "sad", label: "feel sad", msg: "No matter how hard life gets, I hope you never forget that im here for you. Remember to be gentle with yourself especially on the days you feel that you are not enough. You are enough,worthy,still loved,and still needed." },
-    { id: "angry", label: "feel angry", msg: "God is with you even on your hardest days. Just in case nobody has told you lately , you are doing great and im proud of you." },
-    { id: "frustrated", label: "feel frustrated", msg: "I believe in you. If I could give you one thing in life, I would give you the ability to see yourself through my eyes, only then would you realize how special you are." },
-    { id: "miss", label: "miss me ?", msg: "i miss you too , you will always have a special place in my heart. " },
+    {
+      id: "happy",
+      label: "feel happy",
+      msg: "Im happy that you are happy.Glad everything is going well for you, you deserve it.I want to see you win and smash every single dream you have. I want to see you overcome all of the barriers you face and see you succeed. You are destined for greatness and I want to see you achieve it.",
+    },
+    {
+      id: "sad",
+      label: "feel sad",
+      msg: "No matter how hard life gets, I hope you never forget that im here for you. Remember to be gentle with yourself especially on the days you feel that you are not enough. You are enough,worthy,still loved,and still needed.",
+    },
+    {
+      id: "angry",
+      label: "feel angry",
+      msg: "God is with you even on your hardest days. Just in case nobody has told you lately , you are doing great and im proud of you.",
+    },
+    {
+      id: "frustrated",
+      label: "feel frustrated",
+      msg: "I believe in you. If I could give you one thing in life, I would give you the ability to see yourself through my eyes, only then would you realize how special you are.",
+    },
+    {
+      id: "miss",
+      label: "miss me ?",
+      msg: "i miss you too , you will always have a special place in my heart. ",
+    },
   ];
 
   const [subOpen, setSubOpen] = useState(false);
@@ -101,14 +121,12 @@ export default function MoodModal({
         {/* Grid of 5 boxes */}
         <div className="grid grid-cols-2 gap-y-10 gap-x-10 justify-items-center max-w-[520px] mx-auto">
           {choices.slice(0, 4).map((c) => (
-            <button
-              key={c.id}
-              className="group"
-              onClick={() => handlePick(c.msg)}
-            >
-              <img
+            <button key={c.id} className="group" onClick={() => handlePick(c.msg)}>
+              <Image
                 src={boxSrc}
                 alt={c.label}
+                width={128}
+                height={128}
                 className="pixel-img w-28 h-28 md:w-32 md:h-32 mx-auto"
               />
               <div className="text-[#0b4aa1] text-sm md:text-base mt-2 group-hover:underline">
@@ -122,9 +140,11 @@ export default function MoodModal({
             className="group col-span-2 justify-self-center mt-2"
             onClick={() => handlePick(choices[4].msg)}
           >
-            <img
+            <Image
               src={boxSrc}
               alt={choices[4].label}
+              width={128}
+              height={128}
               className="pixel-img w-28 h-28 md:w-32 md:h-32 mx-auto"
             />
             <div className="text-[#0b4aa1] text-sm md:text-base mt-2 text-center group-hover:underline">
@@ -135,11 +155,7 @@ export default function MoodModal({
       </PixelModal>
 
       {/* Inner message modal */}
-      <PixelModal
-        open={subOpen}
-        onClose={() => setSubOpen(false)}
-        title=""
-      >
+      <PixelModal open={subOpen} onClose={() => setSubOpen(false)} title="">
         <p className="text-center text-[#0b4aa1] text-lg leading-8 px-4">
           {message}
         </p>
