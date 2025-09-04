@@ -40,7 +40,7 @@ export default function Platformer() {
   const [started, setStarted] = useState(false); // 👈 modal Start
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
-  const [high, setHigh] = useState(0);
+  const [, setHigh] = useState(0);
 
   const images = useRef<{
     bg?: HTMLImageElement;
@@ -341,7 +341,7 @@ useEffect(() => {
   }
 
   /** ====== Handlers de modals ====== */
-  const startGame = () => setStarted(true);
+  
   const exitToMain = () => {
     router.push("/?main=1");
   };
