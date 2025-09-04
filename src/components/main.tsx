@@ -24,7 +24,7 @@ export default function LandingPage() {
   const [open2, setOpen2] = useState(false);
   const playlist = [
     { id: "2u2Z07ujyD8", title: "Favorite Girl", artist: "Justin Bieber", coverUrl: "/images/2.png", reason: "me acuerdo cuando dijiste que era de tus favoritas y la ibas cantando en el carro" },
-    { id: "Y2QUKEt2p98", title: "Columbia", artist: "Quevedo", coverUrl: "/images/1.png" , reason:"vos sabes, especialmente el min 1:01" },
+    { id: "Y2QUKEt2p98", title: "Columbia", artist: "Quevedo", coverUrl: "/images/1.png" , reason:"vos sabes, especialmente el min 0:41" },
     { id: "MiAoetOXKcY", title: "Say Yes to Heaven", artist: "Lana del Rey", coverUrl: "/images/3.png",reason:"self-explanatory solo lee la letra" },
     { id: "c3JHH6Hc_io", title: "Lucky Ones", artist: "Lana del Rey", coverUrl: "/images/4.png", reason:"This is how I felt being with you (lee la letra jajaja)" },
     { id: "iKejQrGq04w", title: "Unwritten", artist: "Natasha Bedingfield", coverUrl: "/images/5.png", reason:"ifykyk jajaja" },
