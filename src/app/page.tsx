@@ -1,18 +1,12 @@
-// src/app/_home-client.tsx  (Client Component que usa useSearchParams)
-"use client";
+import { Suspense } from "react";
+import HomeClient from "./_home-client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import BoxSplash from "@/components/BoxSplash";
-import Main from "@/components/main";
+export const dynamic = "force-dynamic"; // opcional: evita SSG si usas search params
 
-export default function HomeClient() {
-  const [showMain, setShowMain] = useState(false);
-  const search = useSearchParams();
-
-  useEffect(() => {
-    if (search.get("main") === "1") setShowMain(true);
-  }, [search]);
-
-  return showMain ? <Main /> : <BoxSplash onOpen={() => setShowMain(true)} />;
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <HomeClient />
+    </Suspense>
+  );
 }
