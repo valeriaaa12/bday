@@ -307,7 +307,7 @@ export default function Platformer() {
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] items-center gap-5 bg-[#f3e4fd] p-5 md:p-7 rounded-b-xl">
               <p className="text-[#2c1a4b] leading-7 md:leading-8 text-[clamp(14px,2.6vw,18px)]">
                 Since you want to be Spiderman so bad press Space/W/⬆ to jump and avoid the obstacles
-                to save Mary Jane (aka me) from the Green Goblin.
+                to save Mary Jane (aka yo por pelirrojas va) from the Green Goblin.
               </p>
 
               <img
