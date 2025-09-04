@@ -7,10 +7,9 @@ import { Silkscreen } from "next/font/google";
 
 const pixel = Silkscreen({ subsets: ["latin"], weight: "400" });
 
-/** Estados del player de YouTube */
+
 const YT_STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 } as const;
 
-/** API mínima que usamos del player (sin `any`) */
 type YTPlayer = {
   playVideo: () => void;
   pauseVideo: () => void;

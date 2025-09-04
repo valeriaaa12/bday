@@ -4,7 +4,8 @@ import { Silkscreen } from "next/font/google";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";        // 👈 NEW
 import HeadphonesModal from "../components/music";
-
+import Card from "./card";
+import Surprise from "./surprise";
 const pixel = Silkscreen({ subsets: ["latin"], weight: "400" });
 
 type IconItem = { src: string; alt: string; onClick?: () => void; };
@@ -19,7 +20,8 @@ const ICONS_BASE: IconItem[] = [
 export default function LandingPage() {
   const [songsOpen, setSongsOpen] = useState(false);
   const router = useRouter();                         
-
+  const [open, setOpen] = useState(false);
+  const [open2, setOpen2] = useState(false);
   const playlist = [
     { id: "2u2Z07ujyD8", title: "Favorite Girl", artist: "Justin Bieber", coverUrl: "/images/2.png", reason: "me acuerdo cuando dijiste que era de tus favoritas y la ibas cantando en el carro" },
     { id: "Y2QUKEt2p98", title: "Columbia", artist: "Quevedo", coverUrl: "/images/1.png" , reason:"vos sabes, especialmente el min 1:01" },
@@ -29,17 +31,32 @@ export default function LandingPage() {
     { id: "mtep_hqXltU", title: "TU CHAT", artist: "QUEVEDO", coverUrl: "/images/6.png", reason:"self-explanatory pt.2" },
     { id: "8obld3JrBNM", title: "COSAS QUE NO TE DIJE", artist: "Saiko", coverUrl: "/images/7.png", reason:"...yeah..." },
     { id: "-0qX2nxwsP4", title: "BUENAS NOCHES", artist: "Quevedo", coverUrl: "/images/8.png", reason:"mención honorífica, obvio la tenia que incluir" },
+    { id: "Na2WnQ13zcM", title: "Enchanted", artist: "Taylor Swift", coverUrl: "/images/ts.png", reason:"no soy fan de taylor pero mira la letra " },
+    { id: "tGv7CUutzqU", title: "About You", artist: "The 1975", coverUrl: "/images/aboutyou.png", reason:"I do think about you " },
+    { id: "VBiNZcH27Y8", title: "Otro Atardecer", artist: "Bad Bunny & The Marias", coverUrl: "/images/bb.png", reason:"self-explanatory pt.3" },
+    { id: "bhjqRmMaI1g", title: "Hasta Que Me Olvides", artist: "Luis Miguel", coverUrl: "/images/luismi.png", reason:"luismi le sabe y me entiende" },
+
+
   ];
 
-  // 👇 Añadimos acciones a los íconos según el alt
-  const ICONS: IconItem[] = ICONS_BASE.map((i) => {
-    if (i.alt === "Songs for you") return { ...i, onClick: () => setSongsOpen(true) };
-   if (i.alt === "Spidey game") {
-    return { ...i, onClick: () => router.push("/platformer") }; 
-}
+const ICONS: IconItem[] = ICONS_BASE.map((i) => {
+  if (i.alt === "Songs for you") {
+    return { ...i, onClick: () => setSongsOpen(true) };
+  }
 
-    return i;
-  });
+  if (i.alt === "Spidey game") {
+    return { ...i, onClick: () => router.push("/platformer") };
+  }
+
+  if (i.alt === "Letter for you") {
+    return { ...i, onClick: () => setOpen(true) };
+  }
+if (i.alt === "Reminders for you") {
+    return { ...i, onClick: () => setOpen2(true) };
+  }
+  return i;
+});
+
 
   return (
     <main className={`${pixel.className} landing`}>
@@ -48,7 +65,6 @@ export default function LandingPage() {
       <div className="icons">
         {ICONS.map((i) => (
           <button key={i.src} className="iconBtn" aria-label={i.alt} onClick={i.onClick}>
-            {/* 👇 aplica la clase .spidey sólo a ese icono */}
             <img
               src={i.src}
               alt={i.alt}
@@ -60,6 +76,10 @@ export default function LandingPage() {
       </div>
 
       <HeadphonesModal open={songsOpen} onClose={() => setSongsOpen(false)} playlist={playlist} />
+    {open && (
+  <Card open={open} onClose={() => setOpen(false)} />
+)}
+<Surprise open={open2} onClose={() => setOpen2(false)} />
 
       <style jsx>{`
         .landing {

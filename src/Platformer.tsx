@@ -401,26 +401,33 @@ export default function Platformer() {
             {/* contenido */}
             <div className="grid grid-cols-[1fr_auto] gap-6 bg-[#f3e4fd] p-6 md:p-8 rounded-b-xl">
               <p className="text-[#2c1a4b] leading-7 md:leading-8 text-base md:text-lg">
-                Since you want to be Spiderman so bad press space/W/↑ to jump and avoid the obstacles to save Mary Jane
+                Since you want to be Spiderman so bad press space/W/⬆  to jump and avoid the obstacles to save Mary Jane (aka yo porque las dos somos pelirrojas)
                 from the green goblin.
               </p>
               
-
-              <div className="col-span-2 mt-4 grid place-items-center">
-                <img
+               <img
                 src={ASSETS.mary}
                 alt="Mary Jane"
-                className="h-[150px] image-pixelated select-none"
+                className="h-[150px] image-pixelated select-none mx-auto col-span-2"
                 draggable={false}
-                style={{ paddingBottom: 8 }}
               />
+
+              <div className="col-span-2 mt-4 flex items-center justify-center gap-8">
                 <img
                   src={ASSETS.btnPlay}
-                  alt="PLAY"
+                  alt="PLAY AGAIN"
                   className="h-16 md:h-20 cursor-pointer select-none image-pixelated"
-                  onClick={startGame}
+                  onClick={handleRestart}
                   draggable={false}
                 />
+                <img
+                  src={ASSETS.btnExit}
+                  alt="EXIT"
+                  className="h-16 md:h-20 cursor-pointer select-none image-pixelated"
+                  onClick={exitToMain}
+                  draggable={false}
+                />
+              
               </div>
             </div>
           </div>
