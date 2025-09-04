@@ -1,9 +1,12 @@
-export default function PlatformerLayout({ children }: { children: React.ReactNode }) {
+
+export default function PlatformerLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="es">
-      <body className="platformer-bg">
-        {children}
-      </body>
-    </html>
+    <div className="platformer-bg min-h-screen">
+      {children}
+    </div>
   );
 }

@@ -1,18 +1,21 @@
 "use client";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import BoxSplash from "@/components/BoxSplash";
+import Main from "@/components/main";
 
-import { useState } from "react";
-import BoxSplash from "../components/BoxSplash";
-import Main from "../components/main"; // tu componente existente
-import Platformer from "@/Platformer";
 export default function Page() {
   const [showMain, setShowMain] = useState(false);
+  const search = useSearchParams();
+
+  // Arranca leyendo la URL
+  useEffect(() => {
+    if (search.get("main") === "1") setShowMain(true);
+  }, [search]);
 
   return showMain ? (
-    <>
-      <Main />
-      <Platformer />
-    </>
+    <Main />
   ) : (
-    <BoxSplash onOpen={() => setShowMain(true)} /> // al click, muestra Main
+    <BoxSplash onOpen={() => setShowMain(true)} />
   );
 }

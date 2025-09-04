@@ -34,7 +34,10 @@ export default function LandingPage() {
   // 👇 Añadimos acciones a los íconos según el alt
   const ICONS: IconItem[] = ICONS_BASE.map((i) => {
     if (i.alt === "Songs for you") return { ...i, onClick: () => setSongsOpen(true) };
-    if (i.alt === "Spidey game")  return { ...i, onClick: () => router.push("/app/platformer/page") }; // 👈 Navega
+   if (i.alt === "Spidey game") {
+    return { ...i, onClick: () => router.push("/platformer") }; 
+}
+
     return i;
   });
 
