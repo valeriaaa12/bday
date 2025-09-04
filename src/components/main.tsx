@@ -88,7 +88,7 @@ if (i.alt === "Reminders for you") {
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
-          padding-top: clamp(24px, 8vh, 72px);
+          padding-top: 37px;
           background: url("/images/back1.jpg") center / cover no-repeat fixed;
         }
 

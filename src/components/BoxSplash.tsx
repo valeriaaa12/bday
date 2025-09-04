@@ -53,7 +53,7 @@ export default function BoxSplash({ onOpen }: Props) {
           border-radius: 9999px;
           background: #19467f;
           color: #fff;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
           box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }

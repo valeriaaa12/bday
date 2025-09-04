@@ -7,7 +7,6 @@ import { Silkscreen } from "next/font/google";
 
 const pixel = Silkscreen({ subsets: ["latin"], weight: "400" });
 
-
 const YT_STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 } as const;
 
 type YTPlayer = {
@@ -17,40 +16,23 @@ type YTPlayer = {
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
   getDuration: () => number;
   getCurrentTime: () => number;
-  cueVideoById: (
-    videoId: string | { videoId: string; startSeconds?: number; endSeconds?: number }
-  ) => void;
+  cueVideoById: (videoId: string | { videoId: string; startSeconds?: number; endSeconds?: number }) => void;
 };
 
-/** Tipos de eventos (evita conflicto de tipos) */
 type ReadyEvent = { target: YTPlayer };
 type StateChangeEvent = { target: YTPlayer; data: number };
 
-type Track = {
-  id: string;
-  title: string;
-  artist: string;
-  coverUrl?: string;
-  reason?: string;
-};
+type Track = { id: string; title: string; artist: string; coverUrl?: string; reason?: string; };
 
 type Props = {
   open: boolean;
   onClose: () => void;
   playlist: Track[];
   startIndex?: number;
-  discSizePx?: number;
-  coverSizePx?: number;
 };
 
-/** CSS variables tipadas para evitar `any` en style */
-type CSSVars = React.CSSProperties & {
-  ["--pct"]?: string;
-  ["--c"]?: string;
-  ["--bg"]?: string;
-};
+type CSSVars = React.CSSProperties & { ["--pct"]?: string; ["--c"]?: string; ["--bg"]?: string };
 
-/** mm:ss */
 function toMMSS(totalSeconds: number): string {
   const s = Math.max(0, Math.floor(totalSeconds || 0));
   const m = Math.floor(s / 60);
@@ -63,8 +45,6 @@ export default function HeadphonesModal({
   onClose,
   playlist,
   startIndex = 0,
-  discSizePx = 420,
-  coverSizePx = 360,
 }: Props) {
   const [index, setIndex] = useState<number>(startIndex);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -193,26 +173,16 @@ export default function HeadphonesModal({
           <div className="artist">{track?.artist}</div>
         </div>
 
-        {/* Vinilo + cover */}
+        {/* Vinilo + cover (RESPONSIVE) */}
         <div className={`disc-wrap ${isPlaying ? "spinning" : ""}`}>
-          <div className="disc" style={{ width: discSizePx, height: discSizePx, position: "relative" }}>
-           
+          <div className="disc">
             {track?.coverUrl && (
               <Image
                 src={track.coverUrl}
                 alt="Cover"
-                width={coverSizePx}
-                height={coverSizePx}
+                fill
+                sizes="(max-width: 480px) 180px, (max-width: 768px) 240px, 280px"
                 className="cover"
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  boxShadow: "0 0 0 6px rgba(0,0,0,.5) inset",
-                }}
                 priority
               />
             )}
@@ -221,7 +191,6 @@ export default function HeadphonesModal({
 
         {/* Controles */}
         <div className="controls">
-          {/* Barra con relleno dinámico */}
           <input
             className="seek"
             type="range"
@@ -235,34 +204,32 @@ export default function HeadphonesModal({
             style={seekStyle}
           />
 
-          {/* Timer */}
           <div className="time">
             <span>{toMMSS(current)}</span>
             <span>{toMMSS(duration)}</span>
           </div>
 
-          {/* Botones */}
           <div className="buttons">
             <button className="icon" onClick={handlePrev} aria-label="Previous">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill={PRIMARY}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill={PRIMARY}>
                 <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
               </svg>
             </button>
 
             <button className="play" onClick={handlePlayPause} aria-label="Play/Pause">
               {isPlaying ? (
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="#fff">
                   <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                 </svg>
               ) : (
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="#fff">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               )}
             </button>
 
             <button className="icon" onClick={handleNext} aria-label="Next">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill={PRIMARY}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill={PRIMARY}>
                 <path d="M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z" />
               </svg>
             </button>
@@ -295,12 +262,15 @@ export default function HeadphonesModal({
           justify-content: center;
           background: rgba(0, 0, 0, 0.45);
           z-index: 9999;
+          padding: 12px; /* respeta notch en móviles */
         }
+
+        /* Ventana más pequeña y responsive */
         .modal {
-          width: min(92vw, 560px);
+          width: clamp(300px, 92vw, 480px);
           background: #e8f4ff;
-          border-radius: 24px;
-          padding: 22px 20px 28px;
+          border-radius: 18px;
+          padding: clamp(14px, 3vw, 22px) clamp(12px, 3vw, 20px) clamp(18px, 4vw, 28px);
           position: relative;
           box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
           color: #0d3b66;
@@ -309,80 +279,94 @@ export default function HeadphonesModal({
         .close {
           position: absolute;
           top: 6px;
-          right: 12px;
+          right: 10px;
           border: 0;
           background: transparent;
           color: #ff4d4d;
-          font-size: 28px;
+          font-size: 24px;
           line-height: 1;
           cursor: pointer;
         }
-        .title { margin: 6px 0 10px; letter-spacing: 0.5px; }
-        .meta { margin-bottom: 6px; }
-        .song { font-weight: 700; }
-        .artist { opacity: 0.8; }
 
-        .disc-wrap { display: grid; place-items: center; margin: 12px 0 16px; }
-        .disc { position: relative; }
-        .spinning .disc { animation: spin 5.5s linear infinite; }
+        .title { margin: 4px 0 8px; letter-spacing: .5px; font-size: clamp(16px, 2.8vw, 20px); }
+        .meta { margin-bottom: 6px; }
+        .song { font-weight: 700; font-size: clamp(13px, 2.6vw, 16px); }
+        .artist { opacity: .8; font-size: clamp(12px, 2.4vw, 14px); }
+
+        /* Vinilo responsivo: usa clamp para el diámetro */
+        .disc-wrap { display: grid; place-items: center; margin: 10px 0 12px; }
+        .disc {
+          position: relative;
+          width: clamp(160px, 55vw, 280px);
+          height: clamp(160px, 55vw, 280px);
+          border-radius: 50%;
+          background: radial-gradient(circle at 50% 50%, #222 0 32%, #111 32% 48%, #000 48% 100%);
+          overflow: hidden;
+        }
+        .spinning .disc { animation: spin 6s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .controls { margin-top: 8px; }
+        .cover {
+          border-radius: 50%;
+          object-fit: cover;
+          box-shadow: 0 0 0 6px rgba(0,0,0,.5) inset;
+        }
 
-        /* Barra con relleno del color del botón */
+        .controls { margin-top: 6px; }
+
         .seek {
           -webkit-appearance: none;
           appearance: none;
-          width: 90%;
+          width: 100%;
           height: 10px;
           border-radius: 999px;
-          background: linear-gradient(
-            to right,
-            var(--c) 0 var(--pct),
-            var(--bg) var(--pct) 100%
-          );
+          background: linear-gradient(to right, var(--c) 0 var(--pct), var(--bg) var(--pct) 100%);
           outline: none;
         }
         .seek::-webkit-slider-runnable-track {
-          height: 10px;
-          border-radius: 999px;
-          background: linear-gradient(
-            to right,
-            var(--c) 0 var(--pct),
-            var(--bg) var(--pct) 100%
-          );
+          height: 10px; border-radius: 999px;
+          background: linear-gradient(to right, var(--c) 0 var(--pct), var(--bg) var(--pct) 100%);
         }
         .seek::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 18px; height: 18px; border-radius: 50%;
-          background: var(--c); border: 2px solid #ffffff; margin-top: -4px; cursor: pointer;
+          -webkit-appearance: none; appearance: none;
+          width: 16px; height: 16px; border-radius: 50%;
+          background: var(--c); border: 2px solid #ffffff; margin-top: -3px; cursor: pointer;
         }
         .seek::-moz-range-track { height: 10px; border-radius: 999px; background: var(--bg); }
         .seek::-moz-range-progress { height: 10px; border-radius: 999px; background: var(--c); }
         .seek::-moz-range-thumb {
-          width: 18px; height: 18px; border-radius: 50%;
+          width: 16px; height: 16px; border-radius: 50%;
           background: var(--c); border: 2px solid #ffffff; cursor: pointer;
         }
 
         .time {
-          width: 90%;
+          width: 100%;
           margin: 6px auto 0;
           display: flex; justify-content: space-between;
-          font-size: 12px; opacity: 0.8;
+          font-size: 12px; opacity: .8;
         }
 
-        .buttons { margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 32px; }
+        .buttons {
+          margin-top: 14px;
+          display: flex; align-items: center; justify-content: center; gap: 24px;
+        }
         .icon { background: transparent; border: 0; cursor: pointer; }
         .play {
-          width: 66px; height: 66px; border-radius: 50%;
+          width: 58px; height: 58px; border-radius: 50%;
           border: 0; cursor: pointer; background: ${PRIMARY};
           display: grid; place-items: center; box-shadow: 0 10px 20px rgba(58,134,200,.35);
         }
 
-        .reason { margin-top: 50px; font-size: 12px; line-height: 1.25; margin-bottom: 30px; }
+        .reason { margin-top: 18px; font-size: 12px; line-height: 1.35; margin-bottom: 6px; }
 
-        .yt-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(0 0 0 0); opacity: 0; pointer-events: none; }
+        .yt-hidden {
+          position: absolute; width: 1px; height: 1px; overflow: hidden;
+          clip-path: inset(0 0 0 0); opacity: 0; pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+          .play { width: 64px; height: 64px; }
+        }
       `}</style>
     </div>
   );
