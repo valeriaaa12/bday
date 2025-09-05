@@ -21,7 +21,7 @@ const ASSETS = {
 const VIEW = { width: 960, height: 540 };
 const GROUND_H = 110;
 const PLAYER = { w: 70, h: 70, x: 160 };
-const PHYS = { gravity: 2200, jumpV: 900, baseSpeed: 360, maxFall: 1800 };
+const PHYS = { gravity: 2200, jumpV: 900, baseSpeed: 370, maxFall: 1800 };
 
 type Rect = { x: number; y: number; w: number; h: number };
 type Obstacle = Rect & { kind: "car" | "goblin"; scored?: boolean };
@@ -87,6 +87,42 @@ export default function Platformer() {
     return () => { alive = false; };
   }, []);
 
+ function getDifficulty(score: number) {
+  const level = Math.floor(score / 40); // sube de nivel cada 40 pts
+
+  // Velocidad
+  const accel = 12 + level * 2;
+  const maxSpeed = Math.min(1400, 800 + level * 60);
+
+  // Frecuencia (distancias entre grupos)
+  const minGapBase = Math.max(180, 420 - level * 22);
+  const extraRange  = Math.max(80, 260 - level * 12);
+  const spawnLead   = Math.max(140, 400 - level * 16);
+
+  // Separación mínima segura en función de la velocidad
+  const speedGapFactor = 0.35 + level * 0.035;
+
+  // Tamaño del grupo (cuántos por ráfaga)
+  const groupMin = 1;
+  const groupMax = Math.min(4, 2 + Math.floor(level / 2)); // 1–4 según nivel
+
+  // Gap entre obstáculos del mismo grupo
+  const intraGapBase = Math.max(140, 260 - level * 15); // base “saltable”
+  const intraGapRand = Math.max(40, 120 - level * 8);   // variación
+  const intraSpeedFactor = 0.12; // agrega un pelín con la velocidad
+
+  // Control de saturación en pantalla
+  const maxActive = Math.min(10, 4 + level); // límite superior
+
+  return {
+    level, accel, maxSpeed,
+    minGapBase, extraRange, spawnLead, speedGapFactor,
+    groupMin, groupMax, intraGapBase, intraGapRand, intraSpeedFactor,
+    maxActive
+  };
+}
+
+
   /** ====== INPUT ====== */
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -142,7 +178,9 @@ export default function Platformer() {
 
   /** ====== UPDATE ====== */
   function update(dt: number) {
-    speed.current = Math.min(speed.current + 12 * dt, 800);
+    const D = getDifficulty(score);
+    speed.current = Math.min(speed.current + D.accel * dt, D.maxSpeed);
+
 
     const p = player.current;
     const wantJump = keys.current[" "] || keys.current["space"] || keys.current["arrowup"] || keys.current["w"];
@@ -157,20 +195,86 @@ export default function Platformer() {
     scroll.current += speed.current * dt;
 
     // Spawn distanciado
-    if (nextSpawnXRef.current === 0) nextSpawnXRef.current = scroll.current + VIEW.width + 400;
-    if (scroll.current >= nextSpawnXRef.current) {
-      const kind: Obstacle["kind"] = Math.random() < 0.7 ? "car" : "goblin";
-      let img: HTMLImageElement | undefined; let targetH = 72; let yWorld: number;
-      if (kind === "car") { img = images.current.car; targetH = 50; yWorld = VIEW.height - GROUND_H - targetH + 6; }
-      else { img = images.current.goblin; targetH = 58; yWorld = VIEW.height - GROUND_H - targetH + 4; }
+// ===== Spawning por ráfagas (grupos), con separación segura =====
+if (nextSpawnXRef.current === 0) {
+  nextSpawnXRef.current = scroll.current + VIEW.width + 400;
+}
+
+if (scroll.current >= nextSpawnXRef.current) {
+  const camLeft = scroll.current;
+  const camRight = camLeft + VIEW.width;
+
+  // 1) Cuenta de obstáculos activos (en cámara o un poco adelante)
+  const active = obstacles.current.filter(o => (o.x + o.w) > camLeft && o.x < camRight + 800).length;
+  const canSpawn = Math.max(0, D.maxActive - active);
+  if (canSpawn <= 0) {
+    // Reprograma un poco más adelante si está saturado
+    nextSpawnXRef.current = camRight + 200;
+  } else {
+    // 2) Punto base por delante de la cámara
+    const baseSpawnX = scroll.current + VIEW.width + D.spawnLead;
+
+    // 3) Ultimo obstáculo (el de mayor X)
+    const last = obstacles.current.length
+      ? obstacles.current.reduce((a, b) => (a.x > b.x ? a : b))
+      : undefined;
+
+    // 4) Gap mínimo absoluto respecto al último, para NO solapar grupos
+    const minWorldGap =
+      (last ? last.w : 0) +
+      D.minGapBase +
+      speed.current * D.speedGapFactor;
+
+    // 5) Primer X seguro del grupo
+    let curX = last ? Math.max(baseSpawnX, last.x + minWorldGap) : baseSpawnX;
+
+    // 6) Cuántos vamos a spawnear en ESTE grupo
+    const want = Math.floor(Math.random() * (D.groupMax - D.groupMin + 1)) + D.groupMin;
+    const count = Math.max(1, Math.min(canSpawn, want));
+
+    for (let k = 0; k < count; k++) {
+      // Decide el tipo
+      const kind: Obstacle["kind"] = Math.random() < 0.6 ? "car" : "goblin";
+
+      // Dimensiones y Y
+      let img: HTMLImageElement | undefined;
+      let targetH = 72;
+      let yWorld: number;
+
+      if (kind === "car") {
+        img = images.current.car;
+        targetH = 50;
+        yWorld = VIEW.height - GROUND_H - targetH + 6;
+      } else {
+        img = images.current.goblin;
+        targetH = 58;
+        yWorld = VIEW.height - GROUND_H - targetH + 4;
+      }
+
       const ratio = img && img.height ? img.width / img.height : 2.0;
-      const h = targetH, w = Math.round(targetH * ratio);
-      const xWorld = scroll.current + VIEW.width + 30;
-      obstacles.current.push({ x: xWorld, y: yWorld, w, h, kind, scored: false });
-      const minGap = 420 + Math.floor(speed.current * 0.55);
-      const extra = 220 + Math.random() * 260;
-      nextSpawnXRef.current = xWorld + minGap + extra;
+      const h = targetH;
+      const w = Math.round(targetH * ratio);
+
+      // Inserta obstáculo k en X segura actual
+      obstacles.current.push({ x: curX, y: yWorld, w, h, kind, scored: false });
+
+      // Calcula la separación mínima para el SIGUIENTE del grupo
+      const intraGap =
+        D.intraGapBase +
+        Math.random() * D.intraGapRand +
+        speed.current * D.intraSpeedFactor;
+
+      // El siguiente X del grupo debe estar detrás del "curX + w + intraGap"
+      curX = curX + w + intraGap;
     }
+
+    // 7) Programa la próxima ráfaga (grupo siguiente)
+    const gapHastaSiguienteGrupo =
+      D.minGapBase + Math.random() * D.extraRange + speed.current * 0.18;
+    nextSpawnXRef.current = curX + gapHastaSiguienteGrupo;
+  }
+}
+
 
     // Puntuar
     const playerWorldX = p.x + scroll.current;
