@@ -88,7 +88,7 @@ export default function Platformer() {
   }, []);
 
  function getDifficulty(score: number) {
-  const level = Math.floor(score / 40); // sube de nivel cada 40 pts
+  const level = Math.floor(score / 60);
 
   // Velocidad
   const accel = 12 + level * 2;
@@ -102,25 +102,31 @@ export default function Platformer() {
   // Separación mínima segura en función de la velocidad
   const speedGapFactor = 0.35 + level * 0.035;
 
-  // Tamaño del grupo (cuántos por ráfaga)
+  // Tamaño del grupo (1–4)
   const groupMin = 1;
-  const groupMax = Math.min(4, 2 + Math.floor(level / 2)); // 1–4 según nivel
+  const groupMax = Math.min(4, 2 + Math.floor(level / 2));
 
-  // Gap entre obstáculos del mismo grupo
-  const intraGapBase = Math.max(140, 260 - level * 15); // base “saltable”
-  const intraGapRand = Math.max(40, 120 - level * 8);   // variación
-  const intraSpeedFactor = 0.12; // agrega un pelín con la velocidad
+  // Gap dentro del grupo (saltable)
+  const intraGapBase = Math.max(140, 260 - level * 15);
+  const intraGapRand = Math.max(40, 120 - level * 8);
+  const intraSpeedFactor = 0.12;
 
-  // Control de saturación en pantalla
-  const maxActive = Math.min(10, 4 + level); // límite superior
+  // Límite de activos en pantalla
+  const maxActive = Math.min(10, 4 + level);
+
+  // 🔥 Gap extra cuando hay dos CAR seguidos
+  const carPairMinBase = Math.max(220, 300 - level * 10); // base mínimo extra para "car→car"
+  const carPairSpeedFactor = 0.15;                        // escala con la velocidad
 
   return {
     level, accel, maxSpeed,
     minGapBase, extraRange, spawnLead, speedGapFactor,
     groupMin, groupMax, intraGapBase, intraGapRand, intraSpeedFactor,
-    maxActive
+    maxActive,
+    carPairMinBase, carPairSpeedFactor,
   };
 }
+
 
 
   /** ====== INPUT ====== */
@@ -229,49 +235,78 @@ if (scroll.current >= nextSpawnXRef.current) {
     let curX = last ? Math.max(baseSpawnX, last.x + minWorldGap) : baseSpawnX;
 
     // 6) Cuántos vamos a spawnear en ESTE grupo
-    const want = Math.floor(Math.random() * (D.groupMax - D.groupMin + 1)) + D.groupMin;
-    const count = Math.max(1, Math.min(canSpawn, want));
+const want = Math.floor(Math.random() * (D.groupMax - D.groupMin + 1)) + D.groupMin;
+const count = Math.max(1, Math.min(canSpawn, want));
 
-    for (let k = 0; k < count; k++) {
-      // Decide el tipo
-      const kind: Obstacle["kind"] = Math.random() < 0.6 ? "car" : "goblin";
+// Para saber si el anterior en este grupo también fue "car"
+let prevKindInGroup: Obstacle["kind"] | null = null;
+let prevWInGroup = 0;
 
-      // Dimensiones y Y
-      let img: HTMLImageElement | undefined;
-      let targetH = 72;
-      let yWorld: number;
+for (let k = 0; k < count; k++) {
+  // Decide el tipo
+  const kind: Obstacle["kind"] = Math.random() < 0.6 ? "car" : "goblin";
 
-      if (kind === "car") {
-        img = images.current.car;
-        targetH = 50;
-        yWorld = VIEW.height - GROUND_H - targetH + 6;
-      } else {
-        img = images.current.goblin;
-        targetH = 58;
-        yWorld = VIEW.height - GROUND_H - targetH + 4;
+  // Dimensiones y Y
+  let img: HTMLImageElement | undefined;
+  let targetH = 72;
+  let yWorld: number;
+
+  if (kind === "car") {
+    img = images.current.car;
+    targetH = 50;
+    yWorld = VIEW.height - GROUND_H - targetH + 6;
+  } else {
+    img = images.current.goblin;
+    targetH = 58;
+    yWorld = VIEW.height - GROUND_H - targetH + 4;
+  }
+
+  const ratio = img && img.height ? img.width / img.height : 2.0;
+  const h = targetH;
+  const w = Math.round(targetH * ratio);
+
+  // Si NO es el primero del grupo, calculamos el gap intra-grupo desde el anterior
+  if (k > 0) {
+    // Gap base intra-grupo (saltable) + un poco por velocidad
+    let intraGap =
+      D.intraGapBase +
+      Math.random() * D.intraGapRand +
+      speed.current * D.intraSpeedFactor;
+
+    // 🔥 Si hay "car → car", impón un gap mínimo extra (más generoso)
+    if (kind === "car" && prevKindInGroup === "car") {
+      const carExtraMin = D.carPairMinBase + speed.current * D.carPairSpeedFactor;
+      intraGap = Math.max(intraGap, carExtraMin);
+
+      // Además, asegura que AMBOS quepan en pantalla al mismo tiempo:
+      // Espacio visible disponible (pequeño margen para UI)
+      const margin = 48;
+      const maxSpan = Math.max(120, VIEW.width - D.spawnLead - margin);
+      const projectedSpan = prevWInGroup + intraGap + w;
+
+      if (projectedSpan > maxSpan) {
+        // Reduce lo justo para que ambos quepan sin perder el mínimo extra
+        intraGap = Math.max(carExtraMin, maxSpan - prevWInGroup - w);
       }
-
-      const ratio = img && img.height ? img.width / img.height : 2.0;
-      const h = targetH;
-      const w = Math.round(targetH * ratio);
-
-      // Inserta obstáculo k en X segura actual
-      obstacles.current.push({ x: curX, y: yWorld, w, h, kind, scored: false });
-
-      // Calcula la separación mínima para el SIGUIENTE del grupo
-      const intraGap =
-        D.intraGapBase +
-        Math.random() * D.intraGapRand +
-        speed.current * D.intraSpeedFactor;
-
-      // El siguiente X del grupo debe estar detrás del "curX + w + intraGap"
-      curX = curX + w + intraGap;
     }
 
-    // 7) Programa la próxima ráfaga (grupo siguiente)
-    const gapHastaSiguienteGrupo =
-      D.minGapBase + Math.random() * D.extraRange + speed.current * 0.18;
-    nextSpawnXRef.current = curX + gapHastaSiguienteGrupo;
+    // Avanza X desde el obstáculo previo del grupo
+    curX = curX + prevWInGroup + intraGap;
+  }
+
+  // Inserta obstáculo k en X segura actual
+  obstacles.current.push({ x: curX, y: yWorld, w, h, kind, scored: false });
+
+  // Guarda "prev" para el siguiente del grupo
+  prevKindInGroup = kind;
+  prevWInGroup = w;
+}
+
+// 7) Programa la próxima ráfaga (grupo siguiente)
+const gapHastaSiguienteGrupo =
+  D.minGapBase + Math.random() * D.extraRange + speed.current * 0.18;
+nextSpawnXRef.current = curX + gapHastaSiguienteGrupo;
+
   }
 }
 
